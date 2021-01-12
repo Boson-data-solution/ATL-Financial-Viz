@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 
-app = dash.Dash(__name__, assets_folder='assets', external_stylesheets=[dbc.themes.CERULEAN])
+BS = "https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/flatly/bootstrap.min.css"
+app = dash.Dash(external_stylesheets=[BS])
 server = app.server
 
 app.title = 'Proforma'
@@ -75,6 +76,8 @@ fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
 fig_cost_sunburst.update_layout(title='Total Cost')
 
 app.layout = html.Div([
+    html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
+            width='10%'),
     dbc.Col(width=2),
     dbc.Col([
         dbc.Row([
