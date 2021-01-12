@@ -1,4 +1,4 @@
 # ATL-Financial-Viz
 
 
-![](~/img/draft.pdf)
+![](https://github.com/Boson-data-solution/ATL-Financial-Viz/blob/draft/img/draft.pdf)
