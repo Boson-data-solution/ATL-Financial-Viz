@@ -114,7 +114,7 @@ app.layout = html.Div([
                 dbc.Row([
                     html.H5('Other facts')
                 ]),
-                dbc.Row(style={'height': '50vh'}),
+                dbc.Row(style={'height': '40vh'}),
                 dbc.Row([
                     html.H5('Upload data')
                 ])
@@ -122,13 +122,13 @@ app.layout = html.Div([
             dbc.Col([
                 dbc.Row([
                     dcc.Graph(figure=fig_income_bar),
-                ], style={'height': '30vh'}),
+                ], style={'height': '25vh'}),
                 dbc.Row([
                     dcc.Graph(figure=fig_grouped_cost_bar)
-                ], style={'height': '30vh'}),
+                ], style={'height': '25vh'}),
                 dbc.Row([
                     dcc.Graph(figure=plotly_sub_cost(cost, 'Consultants'))
-                ], style={'height': '30vh'})
+                ], style={'height': '25vh'})
             ], width=4.5),
             dbc.Col([
                 dbc.Row([
