@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 
+
 BS = "https://stackpath.bootstrapcdn.com/bootswatch/4.5.2/flatly/bootstrap.min.css"
 app = dash.Dash(external_stylesheets=[BS])
 app.config.suppress_callback_exceptions = True
@@ -21,49 +22,61 @@ server = app.server
 
 app.title = 'Proforma'
 
-# Read the data
-income = pd.read_csv('data/Olive_Devaud_Income.csv')
-cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
-
 # Prepare the data
 def lease_income(monthly_rent, units, occupancy=0.95):
     return monthly_rent * units * occupancy * 12
 
-income['Yearly_income'] = lease_income(income.Monthly_lease, income.Units, income.Occupancy)
-income = income.sort_values('Yearly_income', ascending=True)
-income['Total'] = 'Annual Income'
 
-grouped_cost = cost.groupby(by=['Categories']).sum()
-grouped_cost = grouped_cost.sort_values('Cost')
-grouped_cost = grouped_cost[grouped_cost['Cost'] > 0]
+def prepare_income(income):
+    income['Yearly_income'] = lease_income(income.Monthly_lease, income.Units, income.Occupancy)
+    income = income.sort_values('Yearly_income', ascending=True)
+    income['Total'] = 'Annual Income'
+    return income
 
-cost['Total'] = 'Total Cost'
+
+def prepare_group_cost(cost):
+    grouped_cost = cost.groupby(by=['Categories']).sum()
+    grouped_cost = grouped_cost.sort_values('Cost')
+    grouped_cost = grouped_cost[grouped_cost['Cost'] > 0]
+    return grouped_cost
+
+
+def prepare_cost(cost):
+    cost['Total'] = 'Total Cost'
+    return cost
+
 
 # Make the plots
-fig_income_bar = go.Figure(data=[go.Bar(
-    y=income.Asset, x=income.Yearly_income,
-    text=income.Yearly_income,
-    textposition='auto',
-    orientation='h'
-    )])
-# fig_income_bar.update_layout(title='Annual Income')
-fig_income_bar.update_layout(margin=dict(l=20, r=20, t=10, b=20))
-fig_income_bar.update_xaxes(title='Income')
+def plot_income_bar(income):
+    fig_income_bar = go.Figure(data=[go.Bar(
+        y=income.Asset, x=income.Yearly_income,
+        text=income.Yearly_income,
+        textposition='auto',
+        orientation='h'
+        )])
+    fig_income_bar.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+    fig_income_bar.update_xaxes(title='Income')
+    return fig_income_bar
 
-fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Yearly_income')
-# fig_income_sunburst.update_layout(title='Total Income')
-fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
-fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
 
-fig_grouped_cost_bar = go.Figure(data=[go.Bar(
-    y=grouped_cost.index, x=grouped_cost.Cost,
-    text=grouped_cost.Cost,
-    textposition='auto',
-    orientation='h'
-    )])
-# fig_grouped_cost_bar.update_layout(title='Cost')
-fig_grouped_cost_bar.update_layout(margin=dict(l=20, r=20, t=10, b=20))
-fig_grouped_cost_bar.update_xaxes(title='Cost')
+def plot_income_sunburst(income):
+    fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Yearly_income')
+    fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+    fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
+    return fig_income_sunburst
+
+
+def plot_cost_bar(grouped_cost):
+    fig_grouped_cost_bar = go.Figure(data=[go.Bar(
+        y=grouped_cost.index, x=grouped_cost.Cost,
+        text=grouped_cost.Cost,
+        textposition='auto',
+        orientation='h'
+        )])
+    fig_grouped_cost_bar.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+    fig_grouped_cost_bar.update_xaxes(title='Cost')
+    return fig_grouped_cost_bar
+
 
 def plotly_sub_cost(df, cat):
     df_sub = df[df['Categories'] == cat].sort_values('Cost')
@@ -77,10 +90,13 @@ def plotly_sub_cost(df, cat):
     fig.update_xaxes(title=f'Cost of {cat}')
     return fig
 
-fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost')
-fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
-# fig_cost_sunburst.update_layout(title='Total Cost')
-fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+
+def plot_cost_sunburst(cost):
+    fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost')
+    fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
+    fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+    return fig_cost_sunburst
+
 
 def parse_contents(contents, filename):
     content_type, content_string = contents.split(',')
@@ -101,6 +117,7 @@ def parse_contents(contents, filename):
         ])
 
     return df
+
 
 upload_style = {
     'width': '200px',
@@ -129,16 +146,16 @@ app.layout = html.Div([
         dbc.Row([
             # Need to auto
             dbc.Col([
-                html.H3('Total Revenue:'),
-                html.H3('$23M')
+                html.H3('Estimated Asset:'),
+                dbc.Row(id='total_asset')
             ]),
             dbc.Col([
                 html.H3('Return:'),
-                html.H3('230%')
+                dbc.Row(id='total_return')
             ]),
             dbc.Col([
                 html.H3('Units:'),
-                html.H3('90')
+                dbc.Row(id='total_units')
             ])
         ]),
         dbc.Row([
@@ -204,20 +221,9 @@ app.layout = html.Div([
               [Input('radioitem', 'value')])
 def render_col2(value):
     if value == 'Revenue':
-        col = dbc.Col([
-                dbc.Row([
-                    dcc.Graph(figure=fig_income_bar),
-                ], style={'height': '70vh'}, id='income_bar')
-            ], width=4.5)
+        col = dbc.Col([dbc.Row(id='income_bar')], width=4.5)
     elif value == 'Cost':
-        col = dbc.Col([
-                dbc.Row([
-                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
-                ], style={'height': '35vh'}),
-                dbc.Row([
-                    dcc.Graph(figure=plotly_sub_cost(cost, 'Consultants')),
-                ], style={'height': '35vh'})
-            ], width=4.5, id='cost_bar')
+        col = dbc.Col(id='cost_bar')
     elif value == 'Plan':
         col = dbc.Col(width=4.5)
     else:
@@ -229,22 +235,17 @@ def render_col2(value):
               [Input('radioitem', 'value')])
 def render_col3(value):
     if value == 'Revenue':
-        col = dbc.Col([
-            dbc.Row([
-                dcc.Graph(figure=fig_income_sunburst)
-                ], style={'height': '65vh'}, id='income_sunburst')
-                ], width=4)
+        col = dbc.Col([dbc.Row(id='income_sunburst')], width=4)
     elif value == 'Cost':
         col = dbc.Col([
-            dbc.Row([
-                dcc.Graph(figure=fig_cost_sunburst)
-                ], style={'height': '65vh'}, id='cost_sunburst')
+            dbc.Row(id='cost_sunburst')
                 ], width=4)
     elif value == 'Plan':
         col = dbc.Col(width=4)
     else:
         col = dbc.Col(width=4)
     return col
+
 
 @app.callback(Output('income_bar', 'children'),
               Input('upload-income', 'contents'),
@@ -254,22 +255,12 @@ def update_income_bar(contents, filename):
         income = parse_contents(contents, filename)
     else:
         income = pd.read_csv('data/Olive_Devaud_Income.csv')
-    income['Yearly_income'] = lease_income(income.Monthly_lease, income.Units, income.Occupancy)
-    income = income.sort_values('Yearly_income', ascending=True)
-    income['Total'] = 'Annual Income'
+    income = prepare_income(income)
 
-    fig_income_bar = go.Figure(data=[go.Bar(
-        y=income.Asset, x=income.Yearly_income,
-        text=income.Yearly_income,
-        textposition='auto',
-        orientation='h'
-    )])
-    fig_income_bar.update_layout(margin=dict(l=20, r=20, t=10, b=20))
-    fig_income_bar.update_xaxes(title='Income')
+    fig_income_bar = plot_income_bar(income)
 
-    return dbc.Row([
-        dcc.Graph(figure=fig_income_bar)
-        ], style={'height': '70vh'})
+    return dbc.Row([dcc.Graph(figure=fig_income_bar)], style={'height': '70vh'})
+
 
 @app.callback(Output('income_sunburst', 'children'),
               Input('upload-income', 'contents'),
@@ -279,17 +270,12 @@ def update_income_sunburst(contents, filename):
         income = parse_contents(contents, filename)
     else:
         income = pd.read_csv('data/Olive_Devaud_Income.csv')
-    income['Yearly_income'] = lease_income(income.Monthly_lease, income.Units, income.Occupancy)
-    income = income.sort_values('Yearly_income', ascending=True)
-    income['Total'] = 'Annual Income'
+    income = prepare_income(income)
 
-    fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Yearly_income')
-    fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
-    fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
+    fig_income_sunburst = plot_income_sunburst(income)
 
-    return dbc.Row([
-        dcc.Graph(figure=fig_income_sunburst)
-        ], style={'height': '65vh'})
+    return dbc.Row([dcc.Graph(figure=fig_income_sunburst)], style={'height': '65vh'})
+
 
 @app.callback(Output('cost_bar', 'children'),
               Input('upload-cost', 'contents'),
@@ -300,28 +286,21 @@ def update_cost_bar(contents, filename):
     else:
         cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
 
-    grouped_cost = cost.groupby(by=['Categories']).sum()
-    grouped_cost = grouped_cost.sort_values('Cost')
-    grouped_cost = grouped_cost[grouped_cost['Cost'] > 0]
-    cost['Total'] = 'Total Cost'
+    grouped_cost = prepare_group_cost(cost)
+    cost = prepare_cost(cost)
 
-    fig_grouped_cost_bar = go.Figure(data=[go.Bar(
-        y=grouped_cost.index, x=grouped_cost.Cost,
-        text=grouped_cost.Cost,
-        textposition='auto',
-        orientation='h'
-        )])
-    fig_grouped_cost_bar.update_layout(margin=dict(l=20, r=20, t=10, b=20))
-    fig_grouped_cost_bar.update_xaxes(title='Cost')
+    fig_grouped_cost_bar = plot_cost_bar(grouped_cost)
 
-    return dbc.Col([
-                dbc.Row([
-                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
+    col = dbc.Col([
+            dbc.Row([
+                dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
                 ], style={'height': '35vh'}),
-                dbc.Row([
-                    dcc.Graph(figure=plotly_sub_cost(cost, 'Consultants')),
+            dbc.Row([
+                dcc.Graph(figure=plotly_sub_cost(cost, 'Consultants')),
                 ], style={'height': '35vh'})
             ], width=4.5)
+    return col
+
 
 @app.callback(Output('cost_sunburst', 'children'),
               Input('upload-cost', 'contents'),
@@ -332,18 +311,61 @@ def update_cost_bar(contents, filename):
     else:
         cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
 
-    grouped_cost = cost.groupby(by=['Categories']).sum()
-    grouped_cost = grouped_cost.sort_values('Cost')
-    grouped_cost = grouped_cost[grouped_cost['Cost'] > 0]
-    cost['Total'] = 'Total Cost'
+    cost = prepare_cost(cost)
 
-    fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost')
-    fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
-    fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+    fig_cost_sunburst = plot_cost_sunburst(cost)
 
-    return dbc.Row([
-        dcc.Graph(figure=fig_cost_sunburst)
-        ], style={'height': '65vh'})
+    return dbc.Row([dcc.Graph(figure=fig_cost_sunburst)], style={'height': '65vh'})
+
+
+@app.callback(Output('total_asset', 'children'),
+              Input('upload-income', 'contents'),
+              State('upload-income', 'filename'))
+def update_income_sunburst(contents, filename, interest_rate=0.08):
+    if contents:
+        income = parse_contents(contents, filename)
+    else:
+        income = pd.read_csv('data/Olive_Devaud_Income.csv')
+    income = prepare_income(income)
+    total_asset = (income.Yearly_income * income.Revenue_rate).sum() / interest_rate
+
+    return html.H3(f'${round(total_asset / 1000000, 2)}M', style={'color': 'blue'})
+
+
+@app.callback(Output('total_units', 'children'),
+              Input('upload-income', 'contents'),
+              State('upload-income', 'filename'))
+def update_income_sunburst(contents, filename):
+    if contents:
+        income = parse_contents(contents, filename)
+    else:
+        income = pd.read_csv('data/Olive_Devaud_Income.csv')
+    living = ['Independent_living', 'Assited_living']
+    total_units = income[income['Asset'].isin(living)].Units.sum()
+
+    return html.H3(str(int(total_units)), style={'color': 'blue'})
+
+@app.callback(Output('total_return', 'children'),
+              Input('upload-income', 'contents'),
+              Input('upload-cost', 'contents'),
+              State('upload-income', 'filename'),
+              State('upload-cost', 'filename'))
+def update_income_sunburst(contents1, contents2, filename1, filename2, interest_rate=0.08):
+    if contents1:
+        income = parse_contents(contents1, filename1)
+    else:
+        income = pd.read_csv('data/Olive_Devaud_Income.csv')
+    if contents2:
+        cost = parse_contents(contents2, filename2)
+    else:
+        cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
+    
+    income = prepare_income(income)
+    total_asset = (income.Yearly_income * income.Revenue_rate).sum() / interest_rate
+
+    total_cost = cost.Cost.sum()
+    
+    return html.H3(f'{int((total_asset - total_cost) / total_cost * 100)}%', style={'color': 'blue'})
 
 
 if __name__ == '__main__':
