@@ -1,5 +1,5 @@
-Asset,Area,Units,Monthly_lease,Occupancy
-Independent_living,16400,35,2600,0.95
-Assited_living,16400,55,4500,0.95
-Learning_centre,1390,1,1737.5,1
-Beauty_shop,250,1,312.5,1
+Asset,Area,Units,Monthly_lease,Occupancy,Revenue_rate
+Independent_living,16400,35,2600,0.95,0.5
+Assited_living,16400,55,4500,0.95,0.5
+Learning_centre,1390,1,1737.5,1,1
+Beauty_shop,250,1,312.5,1,1
