@@ -47,6 +47,8 @@ fig_income_bar.update_layout(margin=dict(l=20, r=20, t=10, b=20))
 fig_income_bar.update_xaxes(title='Income')
 
 fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Yearly_income')
+# fig_income_sunburst.update_layout(title='Total Income')
+fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
 fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
 
 fig_grouped_cost_bar = go.Figure(data=[go.Bar(
@@ -73,24 +75,26 @@ def plotly_sub_cost(df, cat):
 
 fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost')
 fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
-fig_cost_sunburst.update_layout(title='Total Cost')
+# fig_cost_sunburst.update_layout(title='Total Cost')
+fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
 
 app.layout = html.Div([
-    html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
-            width='10%'),
     dbc.Col(width=2),
     dbc.Col([
         dbc.Row([
-            dbc.Col(width=1.5),
             dbc.Col([
-                html.H1('Investor Bridge', style={'textAlign': 'center'})
+                html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
+            width='15%')
+            ]),
+            dbc.Col([
+                html.H1('Investor Bridge', style={'textAlign': 'left'})
             ])
         ]),
         dbc.Row([
             # Need to auto
             dbc.Col([
                 html.H3('Total Revenue:'),
-                html.H3('23M')
+                html.H3('$23M')
             ]),
             dbc.Col([
                 html.H3('Return:'),
@@ -104,43 +108,143 @@ app.layout = html.Div([
         dbc.Row([
             # For the left buttons
             dbc.Col([
+                dbc.Row([html.H5('Choose one:')]),
+                dbc.Row([
+                    dbc.RadioItems(
+                        options=[
+                            {'label': 'Revenue', 'value': 'Revenue'},
+                            {'label': 'Cost', 'value': 'Cost'},
+                            {'label': 'Building Plan', 'value': 'Plan'},
+                            {'label': 'Other facts', 'value': 'Other'}
+                        ],
+                        value='Revenue', id='radioitem'
+                    )
+                ]),
                 dbc.Row(style={'height': '10vh'}),
                 dbc.Row([
-                    html.H5('Cost')
-                ]),
-                dbc.Row([
-                    html.H5('Revenue')
-                ]),
-                dbc.Row([
-                    html.H5('Building Plan')
-                ]),
-                dbc.Row([
-                    html.H5('Other facts')
-                ]),
-                dbc.Row(style={'height': '40vh'}),
-                dbc.Row([
-                    html.H5('Upload data')
+                    html.H5('Upload data:'),
+                    dcc.Upload(
+                        id='upload-income',
+                        children=html.Div([
+                            'Drop or ',
+                            html.A('Select Income')
+                        ]),
+                        style={
+                            'width': '200px',
+                            'height': '40px',
+                            'lineHeight': '40px',
+                            'borderWidth': '1px',
+                            'borderStyle': 'dashed',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px'
+                        }
+                    ),
+                    dcc.Upload(
+                        id='upload-cost',
+                        children=html.Div([
+                            'Drop or ',
+                            html.A('Select Cost')
+                        ]),
+                        style={
+                            'width': '200px',
+                            'height': '40px',
+                            'lineHeight': '40px',
+                            'borderWidth': '1px',
+                            'borderStyle': 'dashed',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px'
+                        }
+                    ),
+                    dcc.Upload(
+                        id='upload-plan',
+                        children=html.Div([
+                            'Drop or ',
+                            html.A('Select Building Plan')
+                        ]),
+                        style={
+                            'width': '200px',
+                            'height': '40px',
+                            'lineHeight': '40px',
+                            'borderWidth': '1px',
+                            'borderStyle': 'dashed',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px'
+                        }
+                    ),
+                    dcc.Upload(
+                        id='upload-other',
+                        children=html.Div([
+                            'Drop or ',
+                            html.A('Select Other Facts')
+                        ]),
+                        style={
+                            'width': '200px',
+                            'height': '40px',
+                            'lineHeight': '40px',
+                            'borderWidth': '1px',
+                            'borderStyle': 'dashed',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px'
+                        }
+                    )
                 ])
             ],width=2),
-            dbc.Col([
-                dbc.Row([
-                    dcc.Graph(figure=fig_income_bar),
-                ], style={'height': '25vh'}),
-                dbc.Row([
-                    dcc.Graph(figure=fig_grouped_cost_bar)
-                ], style={'height': '25vh'}),
-                dbc.Row([
-                    dcc.Graph(figure=plotly_sub_cost(cost, 'Consultants'))
-                ], style={'height': '25vh'})
-            ], width=4.5),
-            dbc.Col([
-                dbc.Row([
-                    dcc.Graph(figure=fig_cost_sunburst)
-                ], style={'height': '85vh'})
-            ], width=4)
+            dbc.Col(width=4.5, id='col2'),
+            dbc.Col(width=4, id='col3')
         ])
     ]) 
 ])
+
+
+@app.callback(Output('col2', 'children'),
+              [Input('radioitem', 'value')])
+def render_col2(value):
+    if value == 'Revenue':
+        col = dbc.Col([
+                dbc.Row([
+                    dcc.Graph(figure=fig_income_bar),
+                ], style={'height': '70vh'})
+            ], width=4.5)
+    elif value == 'Cost':
+        col = dbc.Col([
+                dbc.Row([
+                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
+                ], style={'height': '35vh'}),
+                dbc.Row([
+                    dcc.Graph(figure=plotly_sub_cost(cost, 'Consultants')),
+                ], style={'height': '35vh'})
+            ], width=4.5)
+    elif value == 'Plan':
+        col = dbc.Col(width=4.5)
+    else:
+        col = dbc.Col(width=4.5)
+    return col
+
+
+@app.callback(Output('col3', 'children'),
+              [Input('radioitem', 'value')])
+def render_col3(value):
+    if value == 'Revenue':
+        col = dbc.Col([
+            dbc.Row([
+                dcc.Graph(figure=fig_income_sunburst)
+                ], style={'height': '65vh'})
+                ], width=4)
+    elif value == 'Cost':
+        col = dbc.Col([
+            dbc.Row([
+                dcc.Graph(figure=fig_cost_sunburst)
+                ], style={'height': '65vh'})
+                ], width=4)
+    elif value == 'Plan':
+        col = dbc.Col(width=4)
+    else:
+        col = dbc.Col(width=4)
+    return col
 
 if __name__ == '__main__':
     app.run_server(debug=True)
