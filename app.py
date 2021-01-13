@@ -130,19 +130,27 @@ upload_style = {
     'margin': '10px'
     }
 
+jumbotron = dbc.Jumbotron(
+    [
+        dbc.Container(
+            [dbc.Row([
+               dbc.Col([html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
+            width='15%')]),
+                dbc.Col([
+                html.H2("Investor Bridge", className="display-2")])]),
+                
+                
+            ],
+            fluid=True,
+        )
+    ],
+    fluid=True,
+)
 
 app.layout = html.Div([
+    jumbotron,
     dbc.Col(width=2),
     dbc.Col([
-        dbc.Row([
-            dbc.Col([
-                html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
-            width='15%')
-            ]),
-            dbc.Col([
-                html.H1('Investor Bridge', style={'textAlign': 'left'})
-            ])
-        ]),
         dbc.Row([
             # Need to auto
             dbc.Col([
