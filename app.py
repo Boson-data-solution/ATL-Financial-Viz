@@ -76,21 +76,22 @@ fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
 fig_cost_sunburst.update_layout(title='Total Cost')
 
 app.layout = html.Div([
-    html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
-            width='10%'),
     dbc.Col(width=2),
     dbc.Col([
         dbc.Row([
-            dbc.Col(width=1.5),
             dbc.Col([
-                html.H1('Investor Bridge', style={'textAlign': 'center'})
+                html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
+            width='15%')
+            ]),
+            dbc.Col([
+                html.H1('Investor Bridge', style={'textAlign': 'left'})
             ])
         ]),
         dbc.Row([
             # Need to auto
             dbc.Col([
                 html.H3('Total Revenue:'),
-                html.H3('23M')
+                html.H3('$23M')
             ]),
             dbc.Col([
                 html.H3('Return:'),
@@ -106,16 +107,15 @@ app.layout = html.Div([
             dbc.Col([
                 dbc.Row(style={'height': '10vh'}),
                 dbc.Row([
-                    html.H5('Cost')
-                ]),
-                dbc.Row([
-                    html.H5('Revenue')
-                ]),
-                dbc.Row([
-                    html.H5('Building Plan')
-                ]),
-                dbc.Row([
-                    html.H5('Other facts')
+                    dbc.RadioItems(
+                        options=[
+                            {'label': 'Cost', 'value': 'Cost'},
+                            {'label': 'Revenue', 'value': 'Revenue'},
+                            {'label': 'Building Plan', 'value': 'Plan'},
+                            {'label': 'Other facts', 'value': 'Other'}
+                        ],
+                        value='Cost', id='radioitem'
+                    )
                 ]),
                 dbc.Row(style={'height': '40vh'}),
                 dbc.Row([
