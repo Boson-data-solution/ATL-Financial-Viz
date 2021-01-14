@@ -130,6 +130,16 @@ upload_style = {
     'margin': '10px'
     }
 
+SIDEBAR_STYLE = {
+    "position": "fixed",
+    "top": 240,
+    "left": 0,
+    "bottom": 0,
+    "width": "16rem",
+    "padding": "2rem 1rem",
+    "background-color": "#c9bdb9",
+}
+
 jumbotron = dbc.Jumbotron(
     [
         dbc.Container(
@@ -137,53 +147,38 @@ jumbotron = dbc.Jumbotron(
                dbc.Col([html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
             width='15%')]),
                 dbc.Col([
-                html.H2("Investor Bridge", className="display-2")])]),
-                
-                
+                html.P("Investor Bridge", className="display-4"),
+                html.P("Visualized Proforma",className="display-5")
+                ]),
+                dbc.Col(width=4)]),
+                  
             ],
             fluid=True,
         )
     ],
-    fluid=True,
+    fluid=False,
 )
 
 app.layout = html.Div([
     jumbotron,
-    dbc.Col(width=2),
     dbc.Col([
-        dbc.Row([
-            # Need to auto
-            dbc.Col([
-                html.H3('Estimated Asset:'),
-                dbc.Row(id='total_asset')
-            ]),
-            dbc.Col([
-                html.H3('Return:'),
-                dbc.Row(id='total_return')
-            ]),
-            dbc.Col([
-                html.H3('Units:'),
-                dbc.Row(id='total_units')
-            ])
-        ]),
         dbc.Row([
             # For the left buttons
             dbc.Col([
-                dbc.Row([html.H5('Choose one:')]),
-                dbc.Row([
+                dbc.Col([html.H5('Choose one:')]),
+                dbc.Col([
                     dbc.RadioItems(
                         options=[
                             {'label': 'Revenue', 'value': 'Revenue'},
                             {'label': 'Cost', 'value': 'Cost'},
-                            {'label': 'Building Plan', 'value': 'Plan'},
                             {'label': 'Other facts', 'value': 'Other'}
                         ],
                         value='Revenue', id='radioitem'
                     )
                 ]),
-                dbc.Row(style={'height': '10vh'}),
-                dbc.Row([
-                    html.H5('Upload data:'),
+                dbc.Col(style={'height': '10vh'}),
+                dbc.Col([
+                    html.H5('Upload data:\n'),
                     dcc.Upload(
                         id='upload-income',
                         children=html.Div([
@@ -201,14 +196,6 @@ app.layout = html.Div([
                         style=upload_style
                     ),
                     dcc.Upload(
-                        id='upload-plan',
-                        children=html.Div([
-                            'Drop or ',
-                            html.A('Select Building Plan')
-                        ]),
-                        style=upload_style
-                    ),
-                    dcc.Upload(
                         id='upload-other',
                         children=html.Div([
                             'Drop or ',
@@ -216,10 +203,25 @@ app.layout = html.Div([
                         ]),
                         style=upload_style
                     )
-                ])
-            ],width=2),
-            dbc.Col(width=4.5, id='col2'),
-            dbc.Col(width=4, id='col3')
+                ]),
+                dbc.Col([
+                    # Need to auto
+                    dbc.Col([
+                        html.P('Estimated Asset:',style={'color': 'blue'}),
+                        dbc.Row(id='total_asset')
+                    ]),
+                    dbc.Col([
+                        html.P('Return:',style={'color': 'blue'}),
+                        dbc.Row(id='total_return')
+                    ]),
+                    dbc.Col([
+                        html.P('Units:',style={'color': 'blue'}),
+                        dbc.Row(id='total_units')
+                    ])
+                ]),
+            ],width=200),
+            dbc.Col( id='col2'),
+            dbc.Col( id='col3')
         ])
     ]) 
 ])
@@ -337,7 +339,7 @@ def update_income_sunburst(contents, filename, interest_rate=0.08):
     income = prepare_income(income)
     total_asset = (income.Yearly_income * income.Revenue_rate).sum() / interest_rate
 
-    return html.H3(f'${round(total_asset / 1000000, 2)}M', style={'color': 'blue'})
+    return html.H5(f'${round(total_asset / 1000000, 2)}M')
 
 
 @app.callback(Output('total_units', 'children'),
@@ -351,7 +353,7 @@ def update_income_sunburst(contents, filename):
     living = ['Independent_living', 'Assited_living']
     total_units = income[income['Asset'].isin(living)].Units.sum()
 
-    return html.H3(str(int(total_units)), style={'color': 'blue'})
+    return html.H5(str(int(total_units)))
 
 @app.callback(Output('total_return', 'children'),
               Input('upload-income', 'contents'),
@@ -373,7 +375,7 @@ def update_income_sunburst(contents1, contents2, filename1, filename2, interest_
 
     total_cost = cost.Cost.sum()
     
-    return html.H3(f'{int((total_asset - total_cost) / total_cost * 100)}%', style={'color': 'blue'})
+    return html.H5(f'{int((total_asset - total_cost) / total_cost * 100)}%')
 
 
 if __name__ == '__main__':
