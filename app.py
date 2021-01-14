@@ -28,8 +28,8 @@ def lease_income(monthly_rent, units, occupancy=0.95):
 
 
 def prepare_income(income, occupancy=0.95):
-    income['Yearly_income'] = lease_income(income.Monthly_lease, income.Units, occupancy)
-    income = income.sort_values('Yearly_income', ascending=True)
+    income['Annual_income'] = lease_income(income.Monthly_lease, income.Units, occupancy)
+    income = income.sort_values('Annual_income', ascending=True)
     income['Total'] = 'Annual Income'
     return income
 
@@ -49,8 +49,8 @@ def prepare_cost(cost):
 # Make the plots
 def plot_income_bar(income):
     fig_income_bar = go.Figure(data=[go.Bar(
-        y=income.Asset, x=income.Yearly_income,
-        text=income.Yearly_income,
+        y=income.Asset, x=income.Annual_income,
+        text=income.Annual_income,
         textposition='auto',
         orientation='h'
         )])
@@ -60,7 +60,7 @@ def plot_income_bar(income):
 
 
 def plot_income_sunburst(income):
-    fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Yearly_income')
+    fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Annual_income')
     fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
     fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
     return fig_income_sunburst
@@ -400,7 +400,7 @@ def update_total_asset(contents, occupancy, profit_rate, interest_rate, filename
     else:
         income = pd.read_csv('data/Olive_Devaud_Income.csv')
     income = prepare_income(income, occupancy)
-    total_asset = (income.Yearly_income * profit_rate).sum() / interest_rate
+    total_asset = (income.Annual_income * profit_rate).sum() / interest_rate
 
     return html.H5(f'${round(total_asset / 1000000, 2)}M')
 
@@ -437,7 +437,7 @@ def update_total_return(contents1, contents2,  occupancy, profit_rate, interest_
         cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
     
     income = prepare_income(income, occupancy)
-    total_asset = (income.Yearly_income * profit_rate).sum() / interest_rate
+    total_asset = (income.Annual_income * profit_rate).sum() / interest_rate
 
     total_cost = cost.Cost.sum()
     
