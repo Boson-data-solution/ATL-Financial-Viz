@@ -1,4 +1,5 @@
 import dash
+import dash_table
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
@@ -294,10 +295,14 @@ def render_col2(value):
         col = dbc.Col([dbc.Row(id='income_bar')], width=4)
     elif value == 'Cost':
         col = dbc.Col(id='cost_bar')
-    elif value == 'Plan':
-        col = dbc.Col(width=4.5)
     else:
-        col = dbc.Col(width=4.5)
+        col = dbc.Col([
+            dbc.Row(style={'height': '5vh'}),
+            dbc.Row([
+                dbc.Col(html.Br(), width=3),
+                dbc.Col(id='other_fact_table')
+            ])
+        ])
     return col
 
 
@@ -310,10 +315,8 @@ def render_col3(value):
         col = dbc.Col([
             dbc.Row(id='cost_sunburst')
                 ], width=4)
-    elif value == 'Plan':
-        col = dbc.Col(width=4)
     else:
-        col = dbc.Col(width=4)
+        col = dbc.Col()
     return col
 
 
@@ -388,6 +391,26 @@ def update_cost_bar(contents, filename):
     fig_cost_sunburst = plot_cost_sunburst(cost)
 
     return dbc.Row([dcc.Graph(figure=fig_cost_sunburst)], style={'height': '65vh'})
+
+
+@app.callback(Output('other_fact_table', 'children'),
+              Input('upload-other', 'contents'),
+              State('upload-other', 'filename'))
+def update_income_bar(contents, filename):
+    if contents:
+        other = parse_contents(contents, filename)
+    else:
+        other = pd.read_csv('data/other_fact.csv')
+    
+    t = dash_table.DataTable(
+            columns=[{"name": i, "id": i} for i in other.columns],
+            data=other.to_dict('records'),
+            style_cell={
+                'minWidth': '300px', 
+                'font_size': '20px'}
+        )
+    
+    return t
 
 
 @app.callback(Output('total_asset', 'children'),
