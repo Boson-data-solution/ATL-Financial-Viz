@@ -27,8 +27,8 @@ def lease_income(monthly_rent, units, occupancy=0.95):
     return monthly_rent * units * occupancy * 12
 
 
-def prepare_income(income):
-    income['Yearly_income'] = lease_income(income.Monthly_lease, income.Units, income.Occupancy)
+def prepare_income(income, occupancy=0.95):
+    income['Yearly_income'] = lease_income(income.Monthly_lease, income.Units, occupancy)
     income = income.sort_values('Yearly_income', ascending=True)
     income['Total'] = 'Annual Income'
     return income
@@ -145,28 +145,80 @@ jumbotron = dbc.Jumbotron(
         dbc.Container(
             [dbc.Row([
                dbc.Col([html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
-            width='15%')]),
+            width='25%')]),
                 dbc.Col([
                 html.P("Investor Bridge", className="display-4"),
                 html.P("Visualized Proforma",className="display-5")
                 ]),
                 dbc.Col(width=4)]),
-                  
+            dbc.Row([
+                dbc.Col([
+                    html.H4('Estimated Asset:'),
+                    dbc.Row(id='total_asset')
+                ]),
+                dbc.Col([
+                    html.H4('Return:'),
+                    dbc.Row(id='total_return')
+                ]),
+                dbc.Col([
+                    html.H4('Units:'),
+                    dbc.Row(id='total_units')
+                ])
+            ], style={'color': 'white', 'backgroundColor': '#7FDBFF'})
             ],
             fluid=True,
         )
     ],
-    fluid=False,
+    fluid=False, style={'padding': '0.5rem 0.5rem'}
 )
 
 app.layout = html.Div([
     jumbotron,
+    dbc.Col(width=2),
     dbc.Col([
+        # Sliders
         dbc.Row([
-            # For the left buttons
             dbc.Col([
-                dbc.Col([html.H5('Choose one:')]),
-                dbc.Col([
+                html.H5('Choose Occupancy:'),
+                dcc.Slider(
+                    id='occupancy_slider',
+                    min=0.5,
+                    max=1.00001,
+                    step=0.01,
+                    value=0.95,
+                    marks={occupancy: f'{round(occupancy*100)}%' for occupancy in np.arange(0.5, 1.1, 0.1)}
+                ),
+                html.H6(id='occupancy_output')
+            ]),
+            dbc.Col([
+                html.H5('Choose Profit Rate:'),
+                dcc.Slider(
+                    id='profit_rate_slider',
+                    min=0.3,
+                    max=0.8001,
+                    step=0.01,
+                    value=0.5,
+                    marks={rate: f'{int(rate*100)}%' for rate in np.arange(0.3, 0.9, 0.1)}
+                ),
+                html.H6(id='profit_rate_output')
+            ]),
+            dbc.Col([
+                html.H5('Choose Interest Rate:'),
+                dcc.Slider(
+                    id='interest_rate_slider',
+                    min=0.03,
+                    max=0.1,
+                    step=0.001,
+                    value=0.08,
+                    marks={rate: f'{round(rate*100,1)}%' for rate in np.arange(0.03, 0.11, 0.01)}
+                ),
+                html.H6(id='interest_rate_output')
+            ])
+        ]),
+        dbc.Row([
+            dbc.Col([
+                dbc.Row([html.H5('Choose one:')]),
+                dbc.Row([
                     dbc.RadioItems(
                         options=[
                             {'label': 'Revenue', 'value': 'Revenue'},
@@ -176,9 +228,9 @@ app.layout = html.Div([
                         value='Revenue', id='radioitem'
                     )
                 ]),
-                dbc.Col(style={'height': '10vh'}),
-                dbc.Col([
-                    html.H5('Upload data:\n'),
+                dbc.Row(style={'height': '15vh'}),
+                dbc.Row([
+                    html.H5('Upload data:'),
                     dcc.Upload(
                         id='upload-income',
                         children=html.Div([
@@ -203,35 +255,41 @@ app.layout = html.Div([
                         ]),
                         style=upload_style
                     )
-                ]),
-                dbc.Col([
-                    # Need to auto
-                    dbc.Col([
-                        html.P('Estimated Asset:',style={'color': 'blue'}),
-                        dbc.Row(id='total_asset')
-                    ]),
-                    dbc.Col([
-                        html.P('Return:',style={'color': 'blue'}),
-                        dbc.Row(id='total_return')
-                    ]),
-                    dbc.Col([
-                        html.P('Units:',style={'color': 'blue'}),
-                        dbc.Row(id='total_units')
-                    ])
-                ]),
-            ],width=200),
-            dbc.Col( id='col2'),
-            dbc.Col( id='col3')
+                ])
+            ],width=2),
+            dbc.Col(width=4.5, id='col2'),
+            dbc.Col(width=4, id='col3')
         ])
     ]) 
 ])
+
+
+@app.callback(
+    Output('occupancy_output', 'children'),
+    Input('occupancy_slider', 'value'))
+def update_occupancy(occupancy):
+    return f'You have selected {int(occupancy*100)}%.'
+
+
+@app.callback(
+    Output('profit_rate_output', 'children'),
+    Input('profit_rate_slider', 'value'))
+def update_profit_rate(rate):
+    return f'You have selected {int(rate*100)}%.'
+
+
+@app.callback(
+    Output('interest_rate_output', 'children'),
+    Input('interest_rate_slider', 'value'))
+def update_interest_rate(rate):
+    return f'You have selected {round(rate*100, 1)}%.'
 
 
 @app.callback(Output('col2', 'children'),
               [Input('radioitem', 'value')])
 def render_col2(value):
     if value == 'Revenue':
-        col = dbc.Col([dbc.Row(id='income_bar')], width=4.5)
+        col = dbc.Col([dbc.Row(id='income_bar')], width=4)
     elif value == 'Cost':
         col = dbc.Col(id='cost_bar')
     elif value == 'Plan':
@@ -259,13 +317,14 @@ def render_col3(value):
 
 @app.callback(Output('income_bar', 'children'),
               Input('upload-income', 'contents'),
+              Input('occupancy_slider', 'value'),
               State('upload-income', 'filename'))
-def update_income_bar(contents, filename):
+def update_income_bar(contents, occupancy, filename):
     if contents:
         income = parse_contents(contents, filename)
     else:
         income = pd.read_csv('data/Olive_Devaud_Income.csv')
-    income = prepare_income(income)
+    income = prepare_income(income, occupancy)
 
     fig_income_bar = plot_income_bar(income)
 
@@ -274,13 +333,14 @@ def update_income_bar(contents, filename):
 
 @app.callback(Output('income_sunburst', 'children'),
               Input('upload-income', 'contents'),
+              Input('occupancy_slider', 'value'),
               State('upload-income', 'filename'))
-def update_income_sunburst(contents, filename):
+def update_income_sunburst(contents, occupancy, filename):
     if contents:
         income = parse_contents(contents, filename)
     else:
         income = pd.read_csv('data/Olive_Devaud_Income.csv')
-    income = prepare_income(income)
+    income = prepare_income(income, occupancy)
 
     fig_income_sunburst = plot_income_sunburst(income)
 
@@ -330,14 +390,17 @@ def update_cost_bar(contents, filename):
 
 @app.callback(Output('total_asset', 'children'),
               Input('upload-income', 'contents'),
+              Input('occupancy_slider', 'value'),
+              Input('profit_rate_slider', 'value'),
+              Input('interest_rate_slider', 'value'),
               State('upload-income', 'filename'))
-def update_income_sunburst(contents, filename, interest_rate=0.08):
+def update_total_asset(contents, occupancy, profit_rate, interest_rate, filename):
     if contents:
         income = parse_contents(contents, filename)
     else:
         income = pd.read_csv('data/Olive_Devaud_Income.csv')
-    income = prepare_income(income)
-    total_asset = (income.Yearly_income * income.Revenue_rate).sum() / interest_rate
+    income = prepare_income(income, occupancy)
+    total_asset = (income.Yearly_income * profit_rate).sum() / interest_rate
 
     return html.H5(f'${round(total_asset / 1000000, 2)}M')
 
@@ -345,7 +408,7 @@ def update_income_sunburst(contents, filename, interest_rate=0.08):
 @app.callback(Output('total_units', 'children'),
               Input('upload-income', 'contents'),
               State('upload-income', 'filename'))
-def update_income_sunburst(contents, filename):
+def update_total_units(contents, filename):
     if contents:
         income = parse_contents(contents, filename)
     else:
@@ -358,9 +421,12 @@ def update_income_sunburst(contents, filename):
 @app.callback(Output('total_return', 'children'),
               Input('upload-income', 'contents'),
               Input('upload-cost', 'contents'),
+              Input('occupancy_slider', 'value'),
+              Input('profit_rate_slider', 'value'),
+              Input('interest_rate_slider', 'value'),
               State('upload-income', 'filename'),
               State('upload-cost', 'filename'))
-def update_income_sunburst(contents1, contents2, filename1, filename2, interest_rate=0.08):
+def update_total_return(contents1, contents2,  occupancy, profit_rate, interest_rate, filename1, filename2):
     if contents1:
         income = parse_contents(contents1, filename1)
     else:
@@ -370,8 +436,8 @@ def update_income_sunburst(contents1, contents2, filename1, filename2, interest_
     else:
         cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
     
-    income = prepare_income(income)
-    total_asset = (income.Yearly_income * income.Revenue_rate).sum() / interest_rate
+    income = prepare_income(income, occupancy)
+    total_asset = (income.Yearly_income * profit_rate).sum() / interest_rate
 
     total_cost = cost.Cost.sum()
     
