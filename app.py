@@ -60,7 +60,8 @@ def plot_income_bar(income):
 
 
 def plot_income_sunburst(income):
-    fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Annual_income')
+    fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Annual_income',
+    title="Income Breakdown")
     fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
     fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
     return fig_income_sunburst
@@ -92,7 +93,8 @@ def plotly_sub_cost(df, cat):
 
 
 def plot_cost_sunburst(cost):
-    fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost')
+    fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost',
+    title="Cost Breakdown")
     fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
     fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
     return fig_cost_sunburst
@@ -145,26 +147,26 @@ jumbotron = dbc.Jumbotron(
         dbc.Container(
             [dbc.Row([
                dbc.Col([html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
-            width='25%')]),
+            width='15%')]),
                 dbc.Col([
                 html.P("Investor Bridge", className="display-4"),
-                html.P("Visualized Proforma",className="display-5")
+                html.P("—  Visualized Proforma",className="display-5")
                 ]),
                 dbc.Col(width=4)]),
             dbc.Row([
                 dbc.Col([
-                    html.H4('Estimated Asset:'),
+                    html.H4('Asset Value:',style={'color': 'black'}),
                     dbc.Row(id='total_asset')
                 ]),
                 dbc.Col([
-                    html.H4('Return:'),
+                    html.H4('Return on Cost:',style={'color': 'black'}),
                     dbc.Row(id='total_return')
                 ]),
                 dbc.Col([
-                    html.H4('Units:'),
+                    html.H4('Total Units:',style={'color': 'black'}),
                     dbc.Row(id='total_units')
                 ])
-            ], style={'color': 'white', 'backgroundColor': '#7FDBFF'})
+            ], style={'color': '#22a40c'})
             ],
             fluid=True,
         )
@@ -179,7 +181,7 @@ app.layout = html.Div([
         # Sliders
         dbc.Row([
             dbc.Col([
-                html.H5('Choose Occupancy:'),
+                html.H5('Building Occupancy:'),
                 dcc.Slider(
                     id='occupancy_slider',
                     min=0.5,
@@ -191,7 +193,7 @@ app.layout = html.Div([
                 html.H6(id='occupancy_output')
             ]),
             dbc.Col([
-                html.H5('Choose Profit Rate:'),
+                html.H5('Profit Rate:'),
                 dcc.Slider(
                     id='profit_rate_slider',
                     min=0.3,
@@ -203,7 +205,7 @@ app.layout = html.Div([
                 html.H6(id='profit_rate_output')
             ]),
             dbc.Col([
-                html.H5('Choose Interest Rate:'),
+                html.H5('Estimate factor:'),
                 dcc.Slider(
                     id='interest_rate_slider',
                     min=0.03,
@@ -213,11 +215,11 @@ app.layout = html.Div([
                     marks={rate: f'{round(rate*100,1)}%' for rate in np.arange(0.03, 0.11, 0.01)}
                 ),
                 html.H6(id='interest_rate_output')
-            ])
+            ],style={'height': '18vh'})
         ]),
         dbc.Row([
             dbc.Col([
-                dbc.Row([html.H5('Choose one:')]),
+                dbc.Row([html.H5('Insight for:')]),
                 dbc.Row([
                     dbc.RadioItems(
                         options=[
@@ -229,7 +231,7 @@ app.layout = html.Div([
                     )
                 ]),
                 dbc.Row(style={'height': '15vh'}),
-                dbc.Row([
+                dbc.Col([
                     html.H5('Upload data:'),
                     dcc.Upload(
                         id='upload-income',
