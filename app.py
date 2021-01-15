@@ -7,6 +7,7 @@ from dash.dependencies import Input, Output, State
 
 import base64
 import io
+import json
 
 import numpy as np
 import pandas as pd
@@ -354,8 +355,9 @@ def update_income_sunburst(contents, occupancy, filename):
 
 @app.callback(Output('cost_bar', 'children'),
               Input('upload-cost', 'contents'),
+              Input('cost_sunburst', 'clickData'),
               State('upload-cost', 'filename'))
-def update_cost_bar(contents, filename):
+def update_cost_bar(contents, clickData, filename):
     if contents:
         cost = parse_contents(contents, filename)
     else:
@@ -366,12 +368,23 @@ def update_cost_bar(contents, filename):
 
     fig_grouped_cost_bar = plot_cost_bar(grouped_cost)
 
+    if clickData:
+        col_name = clickData['points'][0]['label']
+    else:
+        col_name = 'Consultants'
+
+    colors = {}
+    for ind in grouped_cost.index:
+        colors[ind] = 'rgb(158,202,225)'
+    colors[col_name] = 'blue'
+
+    fig_grouped_cost_bar.update_traces(marker_color=list(colors.values()))
     col = dbc.Col([
             dbc.Row([
                 dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
                 ], style={'height': '35vh'}),
             dbc.Row([
-                dcc.Graph(figure=plotly_sub_cost(cost, 'Consultants')),
+                dcc.Graph(figure=plotly_sub_cost(cost, col_name)),
                 ], style={'height': '35vh'})
             ], width=4.5)
     return col
@@ -380,7 +393,7 @@ def update_cost_bar(contents, filename):
 @app.callback(Output('cost_sunburst', 'children'),
               Input('upload-cost', 'contents'),
               State('upload-cost', 'filename'))
-def update_cost_bar(contents, filename):
+def update_cost_sunburst(contents, filename):
     if contents:
         cost = parse_contents(contents, filename)
     else:
@@ -390,13 +403,13 @@ def update_cost_bar(contents, filename):
 
     fig_cost_sunburst = plot_cost_sunburst(cost)
 
-    return dbc.Row([dcc.Graph(figure=fig_cost_sunburst)], style={'height': '65vh'})
+    return dbc.Row([dcc.Graph(figure=fig_cost_sunburst, id='cost_sunburst')], style={'height': '65vh'})
 
 
 @app.callback(Output('other_fact_table', 'children'),
               Input('upload-other', 'contents'),
               State('upload-other', 'filename'))
-def update_income_bar(contents, filename):
+def update_fact_table(contents, filename):
     if contents:
         other = parse_contents(contents, filename)
     else:
