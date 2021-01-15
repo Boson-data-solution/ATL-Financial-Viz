@@ -293,7 +293,7 @@ def update_interest_rate(rate):
               [Input('radioitem', 'value')])
 def render_col2(value):
     if value == 'Revenue':
-        col = dbc.Col([dbc.Row(id='income_bar')], width=4)
+        col = dbc.Col([dbc.Row(id='income_bar')], width=3)
     elif value == 'Cost':
         col = dbc.Col(id='cost_bar')
     else:
@@ -311,7 +311,7 @@ def render_col2(value):
               [Input('radioitem', 'value')])
 def render_col3(value):
     if value == 'Revenue':
-        col = dbc.Col([dbc.Row(id='income_sunburst')], width=4)
+        col = dbc.Col([dbc.Row(id='income_sunburst')], width=3)
     elif value == 'Cost':
         col = dbc.Col([
             dbc.Row(id='cost_sunburst')
@@ -385,7 +385,11 @@ def update_cost_bar(contents, clickData, filename):
     fig_grouped_cost_bar = plot_cost_bar(grouped_cost)
 
     if clickData:
-        col_name = clickData['points'][0]['label']
+        clicked = clickData['points'][0]['label']
+        if clicked in grouped_cost.index:
+            col_name = clicked
+        else:
+            col_name = 'Consultants'
     else:
         col_name = 'Consultants'
 
