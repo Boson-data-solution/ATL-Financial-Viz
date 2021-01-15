@@ -64,7 +64,7 @@ def plot_income_bar(income):
 def plot_income_sunburst(income):
     fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Annual_income',
     title="Income Breakdown")
-    fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=40, b=20))
+    fig_income_sunburst.update_layout(margin=dict(l=20, r=0, t=40, b=20))
     fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
     return fig_income_sunburst
 
@@ -98,7 +98,7 @@ def plot_cost_sunburst(cost):
     fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost',
     title="Cost Breakdown")
     fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
-    fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=40, b=20))
+    fig_cost_sunburst.update_layout(margin=dict(l=20, r=0, t=40, b=20))
     return fig_cost_sunburst
 
 
@@ -353,6 +353,22 @@ def update_income_sunburst(contents, occupancy, filename):
     return dbc.Row([dcc.Graph(figure=fig_income_sunburst)], style={'height': '65vh'})
 
 
+@app.callback(Output('cost_sunburst', 'children'),
+              Input('upload-cost', 'contents'),
+              State('upload-cost', 'filename'))
+def update_cost_sunburst(contents, filename):
+    if contents:
+        cost = parse_contents(contents, filename)
+    else:
+        cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
+
+    cost = prepare_cost(cost)
+
+    fig_cost_sunburst = plot_cost_sunburst(cost)
+
+    return dbc.Row([dcc.Graph(figure=fig_cost_sunburst, id='cost_sunburst')], style={'height': '65vh'})
+
+
 @app.callback(Output('cost_bar', 'children'),
               Input('upload-cost', 'contents'),
               Input('cost_sunburst', 'clickData'),
@@ -388,22 +404,6 @@ def update_cost_bar(contents, clickData, filename):
                 ], style={'height': '35vh'})
             ], width=4.5)
     return col
-
-
-@app.callback(Output('cost_sunburst', 'children'),
-              Input('upload-cost', 'contents'),
-              State('upload-cost', 'filename'))
-def update_cost_sunburst(contents, filename):
-    if contents:
-        cost = parse_contents(contents, filename)
-    else:
-        cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
-
-    cost = prepare_cost(cost)
-
-    fig_cost_sunburst = plot_cost_sunburst(cost)
-
-    return dbc.Row([dcc.Graph(figure=fig_cost_sunburst, id='cost_sunburst')], style={'height': '65vh'})
 
 
 @app.callback(Output('other_fact_table', 'children'),
