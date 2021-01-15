@@ -63,7 +63,7 @@ def plot_income_bar(income):
 def plot_income_sunburst(income):
     fig_income_sunburst = px.sunburst(income, path=['Total', 'Asset'], values='Annual_income',
     title="Income Breakdown")
-    fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+    fig_income_sunburst.update_layout(margin=dict(l=20, r=20, t=40, b=20))
     fig_income_sunburst.update_traces(textinfo='label+value+percent entry')
     return fig_income_sunburst
 
@@ -97,7 +97,7 @@ def plot_cost_sunburst(cost):
     fig_cost_sunburst = px.sunburst(cost, path=['Total', 'Categories', 'Details'], values='Cost',
     title="Cost Breakdown")
     fig_cost_sunburst.update_traces(textinfo='label+value+percent entry')
-    fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=10, b=20))
+    fig_cost_sunburst.update_layout(margin=dict(l=20, r=20, t=40, b=20))
     return fig_cost_sunburst
 
 
@@ -123,7 +123,7 @@ def parse_contents(contents, filename):
 
 
 upload_style = {
-    'width': '200px',
+    'width': '180px',
     'height': '40px',
     'lineHeight': '40px',
     'borderWidth': '1px',
