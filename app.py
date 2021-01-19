@@ -384,29 +384,38 @@ def update_cost_bar(contents, clickData, filename):
 
     fig_grouped_cost_bar = plot_cost_bar(grouped_cost)
 
-    if clickData:
-        clicked = clickData['points'][0]['label']
-        if clicked in grouped_cost.index:
-            col_name = clicked
-        else:
-            col_name = 'Consultants'
-    else:
-        col_name = 'Consultants'
-
     colors = {}
     for ind in grouped_cost.index:
         colors[ind] = 'rgb(158,202,225)'
-    colors[col_name] = 'blue'
 
-    fig_grouped_cost_bar.update_traces(marker_color=list(colors.values()))
-    col = dbc.Col([
+    if clickData:
+        clicked = clickData['points'][0]['label']
+        if (clicked in grouped_cost.index) or (clicked in cost.Details.values):
+            if clicked in grouped_cost.index:
+                col_name = clicked
+            else:
+                col_name = cost[cost['Details'] == clicked].Categories.values[0]
+            colors[col_name] = 'blue'
+            fig_grouped_cost_bar.update_traces(marker_color=list(colors.values()))
+            
+            col = dbc.Col([
+                dbc.Row([
+                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
+                    ], style={'height': '35vh'}),
+                dbc.Row([
+                    dcc.Graph(figure=plotly_sub_cost(cost, col_name)),
+                    ], style={'height': '35vh'})
+                ], width=4.5)
+        else:
+            col = dbc.Col([
+                dbc.Row([
+                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '60vh'}),
+                    ], style={'height': '60vh'})], width=4.5)
+    else:
+        col = dbc.Col([
             dbc.Row([
-                dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
-                ], style={'height': '35vh'}),
-            dbc.Row([
-                dcc.Graph(figure=plotly_sub_cost(cost, col_name)),
-                ], style={'height': '35vh'})
-            ], width=4.5)
+                dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '60vh'}),
+                ], style={'height': '60vh'})], width=4.5)
     return col
 
 
