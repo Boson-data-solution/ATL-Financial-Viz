@@ -123,6 +123,35 @@ def parse_contents(contents, filename):
     return df
 
 
+def plot_other_fact_unit(other_fact):
+    df = other_fact.loc[:, ['Area Plan', 'Number of units/stalls']].dropna()
+    df = df.sort_values('Number of units/stalls')
+    fig = go.Figure(data=[go.Bar(
+        y=df['Area Plan'], x=df['Number of units/stalls'],
+        text=df['Number of units/stalls'],
+        textposition='auto',
+        orientation='h'
+        )])
+    fig.update_layout(margin=dict(l=20, r=0, t=10, b=20))
+    fig.update_xaxes(title='Number of units/stalls')
+    return fig
+
+
+def plot_other_fact_area(other_fact):
+    df = other_fact.loc[:, ['Area Plan', 'Area (sqft)']].dropna()
+    df = df.iloc[:-2,:]
+    df = df.sort_values('Area (sqft)')
+    fig = go.Figure(data=[go.Bar(
+        y=df['Area Plan'], x=df['Area (sqft)'],
+        text=df['Area (sqft)'],
+        textposition='auto',
+        orientation='h'
+        )])
+    fig.update_layout(margin=dict(l=20, r=0, t=10, b=20))
+    fig.update_xaxes(title='Area (sqft)')
+    return fig
+
+
 upload_style = {
     'width': '180px',
     'height': '40px',
@@ -262,7 +291,7 @@ app.layout = html.Div([
                 ])
             ],width=2),
             dbc.Col(width=4.5, id='col2'),
-            dbc.Col(width=4, id='col3')
+            dbc.Col(dbc.Row([dcc.Graph(id='col_fig')], style={'height': '65vh'}), width=4)
         ])
     ]) 
 ])
@@ -293,32 +322,53 @@ def update_interest_rate(rate):
               [Input('radioitem', 'value')])
 def render_col2(value):
     if value == 'Revenue':
-        col = dbc.Col([dbc.Row(id='income_bar')], width=3)
+        col = dbc.Col(id='income_bar', width=3)
     elif value == 'Cost':
         col = dbc.Col(id='cost_bar')
     else:
         col = dbc.Col([
-            dbc.Row(style={'height': '5vh'}),
             dbc.Row([
-                dbc.Col(html.Br(), width=3),
                 dbc.Col(id='other_fact_table')
-            ])
+            ], style={'height': '60vh'})
         ])
     return col
 
 
-@app.callback(Output('col3', 'children'),
-              [Input('radioitem', 'value')])
-def render_col3(value):
-    if value == 'Revenue':
-        col = dbc.Col([dbc.Row(id='income_sunburst')], width=3)
-    elif value == 'Cost':
-        col = dbc.Col([
-            dbc.Row(id='cost_sunburst')
-                ], width=4)
+@app.callback(Output('col_fig', 'figure'),
+              [Input('radioitem', 'value'),
+              Input('upload-income', 'contents'),
+              Input('occupancy_slider', 'value'),
+              Input('upload-cost', 'contents'),
+              Input('upload-other', 'contents'),
+              State('upload-income', 'filename'),
+              State('upload-cost', 'filename'),
+              State('upload-other', 'filename')])
+def update_sunburst(value, income_contents, occupancy, cost_comtents, other_contents, 
+    income_name, cost_name, other_name):
+    if income_contents:
+        income = parse_contents(income_contents, income_name)
     else:
-        col = dbc.Col()
-    return col
+        income = pd.read_csv('data/Olive_Devaud_Income.csv')
+    income = prepare_income(income, occupancy)
+
+    if cost_comtents:
+        cost = parse_contents(cost_comtents, cost_name)
+    else:
+        cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
+
+    cost = prepare_cost(cost)
+
+    if other_contents:
+        other = parse_contents(other_contents, other_name)
+    else:
+        other = pd.read_csv('data/other_fact.csv')
+    
+    if value == 'Revenue':
+        return plot_income_sunburst(income)
+    elif value == 'Cost':
+        return plot_cost_sunburst(cost)
+    else:
+        return plot_other_fact_unit(other)
 
 
 @app.callback(Output('income_bar', 'children'),
@@ -337,41 +387,9 @@ def update_income_bar(contents, occupancy, filename):
     return dbc.Row([dcc.Graph(figure=fig_income_bar)], style={'height': '70vh'})
 
 
-@app.callback(Output('income_sunburst', 'children'),
-              Input('upload-income', 'contents'),
-              Input('occupancy_slider', 'value'),
-              State('upload-income', 'filename'))
-def update_income_sunburst(contents, occupancy, filename):
-    if contents:
-        income = parse_contents(contents, filename)
-    else:
-        income = pd.read_csv('data/Olive_Devaud_Income.csv')
-    income = prepare_income(income, occupancy)
-
-    fig_income_sunburst = plot_income_sunburst(income)
-
-    return dbc.Row([dcc.Graph(figure=fig_income_sunburst)], style={'height': '65vh'})
-
-
-@app.callback(Output('cost_sunburst', 'children'),
-              Input('upload-cost', 'contents'),
-              State('upload-cost', 'filename'))
-def update_cost_sunburst(contents, filename):
-    if contents:
-        cost = parse_contents(contents, filename)
-    else:
-        cost = pd.read_csv('data/Olive_Devaud_Cost.csv')
-
-    cost = prepare_cost(cost)
-
-    fig_cost_sunburst = plot_cost_sunburst(cost)
-
-    return dbc.Row([dcc.Graph(figure=fig_cost_sunburst, id='cost_sunburst')], style={'height': '65vh'})
-
-
 @app.callback(Output('cost_bar', 'children'),
               Input('upload-cost', 'contents'),
-              Input('cost_sunburst', 'clickData'),
+              Input('col_fig', 'clickData'),
               State('upload-cost', 'filename'))
 def update_cost_bar(contents, clickData, filename):
     if contents:
@@ -438,6 +456,24 @@ def update_cost_bar(contents, clickData, filename):
     return col
 
 
+# # If a table is returned:
+# @app.callback(Output('other_fact_table', 'children'),
+#               Input('upload-other', 'contents'),
+#               State('upload-other', 'filename'))
+# def update_fact_table(contents, filename):
+#     if contents:
+#         other = parse_contents(contents, filename)
+#     else:
+#         other = pd.read_csv('data/other_fact.csv')
+    
+#     t = dash_table.DataTable(
+#             columns=[{"name": i, "id": i} for i in other.columns],
+#             data=other.to_dict('records'),
+#         #     style_cell={
+#         #         'minWidth': '300px', 
+#         #         'font_size': '20px'}
+#         ) 
+#     return t
 @app.callback(Output('other_fact_table', 'children'),
               Input('upload-other', 'contents'),
               State('upload-other', 'filename'))
@@ -447,15 +483,8 @@ def update_fact_table(contents, filename):
     else:
         other = pd.read_csv('data/other_fact.csv')
     
-    t = dash_table.DataTable(
-            columns=[{"name": i, "id": i} for i in other.columns],
-            data=other.to_dict('records'),
-            style_cell={
-                'minWidth': '300px', 
-                'font_size': '20px'}
-        )
-    
-    return t
+ 
+    return dcc.Graph(figure=plot_other_fact_area(other))
 
 
 @app.callback(Output('total_asset', 'children'),
