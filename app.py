@@ -384,7 +384,7 @@ def update_income_bar(contents, occupancy, filename):
 
     fig_income_bar = plot_income_bar(income)
 
-    return dbc.Row([dcc.Graph(figure=fig_income_bar)], style={'height': '70vh'})
+    return dbc.Row([dcc.Graph(figure=fig_income_bar)], style={'height': '58vh'})
 
 
 @app.callback(Output('cost_bar', 'children'),
@@ -456,24 +456,7 @@ def update_cost_bar(contents, clickData, filename):
     return col
 
 
-# # If a table is returned:
-# @app.callback(Output('other_fact_table', 'children'),
-#               Input('upload-other', 'contents'),
-#               State('upload-other', 'filename'))
-# def update_fact_table(contents, filename):
-#     if contents:
-#         other = parse_contents(contents, filename)
-#     else:
-#         other = pd.read_csv('data/other_fact.csv')
-    
-#     t = dash_table.DataTable(
-#             columns=[{"name": i, "id": i} for i in other.columns],
-#             data=other.to_dict('records'),
-#         #     style_cell={
-#         #         'minWidth': '300px', 
-#         #         'font_size': '20px'}
-#         ) 
-#     return t
+# If a table is returned:
 @app.callback(Output('other_fact_table', 'children'),
               Input('upload-other', 'contents'),
               State('upload-other', 'filename'))
@@ -483,8 +466,25 @@ def update_fact_table(contents, filename):
     else:
         other = pd.read_csv('data/other_fact.csv')
     
+    t = dash_table.DataTable(
+            columns=[{"name": i, "id": i} for i in other.columns],
+            data=other.to_dict('records'),
+        #     style_cell={
+        #         'minWidth': '300px', 
+        #         'font_size': '20px'}
+        ) 
+    return t
+# @app.callback(Output('other_fact_table', 'children'),
+#               Input('upload-other', 'contents'),
+#               State('upload-other', 'filename'))
+# def update_fact_table(contents, filename):
+#     if contents:
+#         other = parse_contents(contents, filename)
+#     else:
+#         other = pd.read_csv('data/other_fact.csv')
+    
  
-    return dcc.Graph(figure=plot_other_fact_area(other))
+#     return dcc.Graph(figure=plot_other_fact_area(other))
 
 
 @app.callback(Output('total_asset', 'children'),
