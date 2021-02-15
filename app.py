@@ -177,7 +177,7 @@ jumbotron = dbc.Jumbotron(
     [
         dbc.Container(
             [dbc.Row([
-               dbc.Col([html.Img(src="https://i.ibb.co/qyddfCX/aaa7b154-f309-4610-a845-24d833c35a1e-200x200.png", 
+               dbc.Col([html.Img(src="https://i.ibb.co/6Yf0mpW/1610313314949.jpg", 
             width='15%')]),
                 dbc.Col([
                 html.P("Investor Bridge", className="display-4"),
