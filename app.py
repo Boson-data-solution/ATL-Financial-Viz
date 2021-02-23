@@ -163,16 +163,6 @@ upload_style = {
     'margin': '10px'
     }
 
-SIDEBAR_STYLE = {
-    "position": "fixed",
-    "top": 240,
-    "left": 0,
-    "bottom": 0,
-    "width": "16rem",
-    "padding": "2rem 1rem",
-    "background-color": "#c9bdb9",
-}
-
 jumbotron = dbc.Jumbotron(
     [
         dbc.Container(
@@ -291,7 +281,7 @@ app.layout = html.Div([
                 ])
             ],width=2),
             dbc.Col(width=4.5, id='col2'),
-            dbc.Col(dbc.Row([dcc.Graph(id='col_fig')], style={'height': '65vh'}), width=4)
+            dbc.Col(dbc.Row([dcc.Graph(id='col_fig')], style={'height': '600px'}), width=4)
         ])
     ]) 
 ])
@@ -329,7 +319,7 @@ def render_col2(value):
         col = dbc.Col([
             dbc.Row([
                 dbc.Col(id='other_fact_table')
-            ], style={'height': '60vh'})
+            ], style={'height': '600px'})
         ])
     return col
 
@@ -384,7 +374,7 @@ def update_income_bar(contents, occupancy, filename):
 
     fig_income_bar = plot_income_bar(income)
 
-    return dbc.Row([dcc.Graph(figure=fig_income_bar)], style={'height': '58vh'})
+    return dbc.Row([dcc.Graph(figure=fig_income_bar)], style={'height': '650px'})
 
 
 @app.callback(Output('cost_bar', 'children'),
@@ -414,11 +404,11 @@ def update_cost_bar(contents, clickData, filename):
                 
             col = dbc.Col([
                 dbc.Row([
-                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
-                    ], style={'height': '35vh'}),
+                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '300px'}),
+                    ], style={'height': '300px'}),
                 dbc.Row([
                     dcc.Graph(figure=plotly_sub_cost(cost, col_name)),
-                    ], style={'height': '35vh'})
+                    ], style={'height': '300px'})
                 ], width=4.5)
 
         elif clicked in cost.Details.values:
@@ -437,22 +427,22 @@ def update_cost_bar(contents, clickData, filename):
             fig_sub_cost_bar.update_traces(marker_color=list(sub_colors.values()))
             col = dbc.Col([
                 dbc.Row([
-                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '35vh'}),
-                    ], style={'height': '35vh'}),
+                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '300px'}),
+                    ], style={'height': '300px'}),
                 dbc.Row([
                     dcc.Graph(figure=fig_sub_cost_bar),
-                    ], style={'height': '35vh'})
+                    ], style={'height': '300px'})
                 ], width=4.5)
         else:
             col = dbc.Col([
                 dbc.Row([
-                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '60vh'}),
-                    ], style={'height': '60vh'})], width=4.5)
+                    dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '600px'}),
+                    ], style={'height': '600px'})], width=4.5)
     else:
         col = dbc.Col([
             dbc.Row([
-                dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '60vh'}),
-                ], style={'height': '60vh'})], width=4.5)
+                dcc.Graph(figure=fig_grouped_cost_bar, style={'height': '600px'}),
+                ], style={'height': '600px'})], width=4.5)
     return col
 
 
